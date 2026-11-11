@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Стриж</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f4f1; --fg:#0a0a0a;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0a0a0a;--fg:#f4f4f1}}
+:root[data-theme="dark"]{--bg:#0a0a0a;--fg:#f4f4f1}
+html,body{height:100%;margin:0}
+body{
+  background:var(--fg);color:var(--fg);
+  font-family:"Archivo Black","Arial Black",Impact,sans-serif;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none;
+}
+#wrap{position:relative;height:100%;max-height:760px;aspect-ratio:2/3;max-width:100%;background:var(--bg)}
+canvas{width:100%;height:100%;display:block;background:var(--bg)}
+#overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.panel{pointer-events:auto;background:var(--bg);color:var(--fg);border:4px solid var(--fg);box-shadow:8px 8px 0 var(--fg);padding:22px 24px;width:min(84%,340px);box-sizing:border-box;max-height:92%;overflow-y:auto}
+.panel h1{margin:0;font-size:3.6rem;line-height:.95;letter-spacing:-.03em;font-weight:400}
+.panel h2{margin:0 0 12px;font-size:2rem;line-height:1;font-weight:400;letter-spacing:-.02em}
+.panel p,.panel label{font:500 .95rem/1.35 system-ui,"Helvetica Neue",Arial,sans-serif}
+.panel p{margin:10px 0 0}
+.panel label{display:block;margin:20px 0 6px;font-weight:700}
+.sub{margin:10px 0 0}
+input{width:100%;box-sizing:border-box;font:400 1.1rem "Archivo Black","Arial Black",sans-serif;padding:11px 12px;border:3px solid var(--fg);background:var(--bg);color:var(--fg);border-radius:0;user-select:text;-webkit-user-select:text}
+input:focus-visible,.btn:focus-visible{outline:3px solid var(--fg);outline-offset:3px}
+.err{min-height:1.2em;margin:6px 0 0!important;font-weight:700!important}
+.btn{display:block;width:100%;box-sizing:border-box;font:400 1.1rem "Archivo Black","Arial Black",sans-serif;text-align:center;padding:12px 14px;margin-top:14px;border:3px solid var(--fg);border-radius:0;background:var(--bg);color:var(--fg);box-shadow:5px 5px 0 var(--fg);cursor:pointer}
+.btn.primary{background:var(--fg);color:var(--bg)}
+.btn:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--fg)}
+.row{display:flex;gap:12px}.row .btn{margin-top:14px}
+.big{font-size:4.2rem;line-height:1;margin:4px 0 0}
+#list{list-style:none;margin:0;padding:0;border-top:3px solid var(--fg)}
+#list li{display:grid;grid-template-columns:2.2rem 1fr auto;gap:8px;padding:8px 6px;border-bottom:2px solid var(--fg);font-size:1rem;align-items:baseline}
+#list li .n{opacity:.55}
+#list li .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#list li.me{background:var(--fg);color:var(--bg)}
+#list li.me .n{opacity:.7}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c" width="400" height="600"></canvas>
+  <div id="overlay">
+    <section class="panel" id="menu">
+      <h1>Стриж</h1>
+      <p class="sub">Летіть між колонами. Одна помилка — і кінець.</p>
+      <label for="nick">Ваш нікнейм</label>
+      <input id="nick" maxlength="14" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Від 2 до 14 символів">
+      <p class="err" id="err" role="alert"></p>
+      <button class="btn primary" id="play">Грати</button>
+      <button class="btn" id="toBoard">Топ-10</button>
+      <p>Змах крил: пробіл, клік або дотик.</p>
+    </section>
+
+    <section class="panel hidden" id="board">
+      <h2>Топ-10 за весь час</h2>
+      <ol id="list"></ol>
+      <p id="boardNote"></p>
+      <button class="btn" id="boardBack">Назад</button>
+    </section>
+
+    <section class="panel hidden" id="over">
+      <h2>Кінець</h2>
+      <p style="margin-top:0">Ваш рахунок</p>
+      <div class="big" id="finalScore">0</div>
+      <p id="overBest"></p>
+      <p id="overNote"></p>
+      <button class="btn primary" id="again">Ще раз</button>
+      <div class="row">
+        <button class="btn" id="overBoard">Топ-10</button>
+        <button class="btn" id="overMenu">Меню</button>
+      </div>
+    </section>
+  </div>
+</div>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+const W=400,H=600,GROUND=60,TAU=Math.PI*2;
+const GRAV=0.11,FLAP=-3.7,SPEED=1.6,GAP=160,PIPE_W=62,SPACING=230;
+const cs=getComputedStyle(document.documentElement);
+let BG='#f4f4f1',FG='#0a0a0a';
+const $=id=>document.getElementById(id);
+let best=0,nick='';
+try{best=parseInt(localStorage.getItem('swift-best'))||0;nick=localStorage.getItem('swift-nick')||''}catch(e){}
+$('nick').value=nick;
+let bird,pipes,score,state='menu',frame=0,deadTimer=0,prevPanel='menu';
+
+const FAR=[[40,60],[30,90],[50,50],[36,110],[44,70],[30,40],[50,100],[40,60],[40,80],[40,50]];
+const NEAR=[[60,40],[34,70],[46,30],[50,90],[30,50],[56,36],[44,64],[40,44],[40,26]];
+
+/* ---------- panels ---------- */
+function show(id){
+  ['menu','board','over'].forEach(p=>$(p).classList.toggle('hidden',p!==id));
+  if(id)prevPanel=id;
+}
+function hideAll(){['menu','board','over'].forEach(p=>$(p).classList.add('hidden'))}
+
+/* ---------- leaderboard (local to this browser) ---------- */
+const SCORES_KEY='swift-scores';
+let rows=[];
+function loadScores(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(SCORES_KEY)||'[]');
+    return Array.isArray(saved)?saved.filter(r=>r&&typeof r.name==='string'&&Number.isFinite(Number(r.best))).map(r=>({name:r.name.slice(0,14),best:Number(r.best)})).sort((a,b)=>b.best-a.best).slice(0,10):[];
+  }catch(e){return [];}
+}
+function renderBoard(){
+  const list=$('list');list.textContent='';
+  rows.forEach((r,i)=>{
+    const li=document.createElement('li');
+    if(r.name===nick)li.className='me';
+    const n=document.createElement('span');n.className='n';n.textContent=(i+1)+'.';
+    const nm=document.createElement('span');nm.className='nm';nm.textContent=String(r.name||'Без імені').slice(0,14);
+    const sc=document.createElement('span');sc.textContent=Number(r.best)||0;
+    li.append(n,nm,sc);list.append(li);
+  });
+  const note=$('boardNote');
+  if(!rows.length)note.textContent='Поки порожньо. Зіграйте й встановіть рекорд!';
+  else note.textContent='Рейтинг зберігається лише в цьому браузері.';
+}
+function submit(sc){
+  try{
+    rows=loadScores();
+    const existing=rows.find(r=>r.name.toLocaleLowerCase()===nick.toLocaleLowerCase());
+    if(existing)existing.best=Math.max(existing.best,sc);
+    else rows.push({name:nick,best:sc});
+    rows.sort((a,b)=>b.best-a.best);
+    rows=rows.slice(0,10);
+    localStorage.setItem(SCORES_KEY,JSON.stringify(rows));
+    return true;
+  }catch(e){return false;}
+}
+
+/* ---------- game ---------- */
+function resetBird(){
+  bird={x:100,y:H/2-GROUND/2,vy:0,r:11,rot:0};
+  pipes=[];score=0;
+}
+function addPipe(x){
+  const min=70,max=H-GROUND-GAP-70;
+  pipes.push({x,top:min+Math.random()*(max-min),passed:false});
+}
+function startRun(){resetBird();state='ready';hideAll();}
+function flap(){
+  if(state==='ready'){state='play';addPipe(W+40);}
+  if(state==='play')bird.vy=FLAP;
+  else if(state==='dead'&&deadTimer<=0)startRun();
+}
+async function die(){
+  state='dead';deadTimer=40;
+  const newBest=score>best;
+  if(newBest){best=score;try{localStorage.setItem('swift-best',best)}catch(e){}}
+  $('finalScore').textContent=score;
+  $('overBest').textContent=newBest&&score>0?'Новий особистий рекорд!':'Ваш рекорд: '+best;
+  $('overNote').textContent='';
+  show('over');
+  const ok=submit(score);
+  if(!ok)$('overNote').textContent='Не вдалося зберегти результат у цьому браузері.';
+  else if(newBest&&score>0)$('overNote').textContent='Результат записано до локального рейтингу.';
+}
+function update(){
+  frame++;
+  if(state==='menu'||state==='ready'){bird.y=H/2-GROUND/2+Math.sin(frame/25)*6;return;}
+  if(deadTimer>0)deadTimer--;
+  if(state==='play'){
+    bird.vy+=GRAV;bird.y+=bird.vy;
+    bird.rot=Math.max(-0.4,Math.min(1.1,bird.vy/5));
+    pipes.forEach(p=>p.x-=SPEED);
+    if(pipes.length&&pipes[pipes.length-1].x<W-SPACING)addPipe(W+40);
+    if(pipes.length&&pipes[0].x<-PIPE_W-10)pipes.shift();
+    for(const p of pipes){
+      if(!p.passed&&p.x+PIPE_W<bird.x){p.passed=true;score++}
+      const inX=bird.x+bird.r>p.x-4&&bird.x-bird.r<p.x+PIPE_W+4;
+      if(inX&&(bird.y-bird.r+1<p.top||bird.y+bird.r-1>p.top+GAP)){die();return;}
+    }
+    if(bird.y+bird.r>H-GROUND){bird.y=H-GROUND-bird.r;die();return;}
+    if(bird.y-bird.r<0){bird.y=bird.r;bird.vy=0;}
+  }else if(state==='dead'){
+    if(bird.y+bird.r<H-GROUND){bird.vy+=GRAV*2;bird.y+=bird.vy;bird.rot=Math.min(1.5,bird.rot+.05);}
+    else bird.y=H-GROUND-bird.r;
+  }
+}
+
+/* ---------- drawing ---------- */
+function skyline(arr,speed,alpha){
+  const off=(frame*speed)%W;
+  ctx.globalAlpha=alpha;ctx.fillStyle=FG;
+  for(let rep=0;rep<2;rep++){
+    let x=rep*W-off;
+    for(const [w,h] of arr){ctx.fillRect(x,H-GROUND-h-40,w-2,h+40);x+=w;}
+  }
+  ctx.globalAlpha=1;
+}
+function hatch(x,y,w,h,step){
+  ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+  ctx.strokeStyle=FG;ctx.lineWidth=2;ctx.beginPath();
+  for(let i=-h;i<w+h;i+=step){ctx.moveTo(x+i,y+h);ctx.lineTo(x+i+h,y);}
+  ctx.stroke();ctx.restore();
+}
+function drawPipe(p,y,h,flip){
+  const x=p.x;
+  ctx.fillStyle=BG;ctx.fillRect(x,y,PIPE_W,h);
+  hatch(x+PIPE_W*.55,y,PIPE_W*.45,h,7);
+  ctx.strokeStyle=FG;ctx.lineWidth=4;ctx.strokeRect(x,y,PIPE_W,h);
+  const capY=flip?y+h-24:y;
+  ctx.fillStyle=FG;ctx.fillRect(x-6,capY,PIPE_W+12,24);
+  ctx.fillStyle=BG;
+  const ly=flip?capY+16:capY+6;ctx.fillRect(x+4,ly,PIPE_W-8,2);
+}
+function drawBird(){
+  ctx.save();ctx.translate(bird.x,bird.y);ctx.rotate(bird.rot);
+  const f=state==='play'?Math.sin(frame/(bird.vy<0?2:5))*8:Math.sin(frame/10)*3;
+  ctx.fillStyle=FG;ctx.strokeStyle=BG;ctx.lineWidth=2;ctx.lineJoin='miter';
+  const pts=[[-20,-8],[-8,-6],[5,-9],[22,-2],[7,2],[-3,7],[-10,2],[-20,3],[-14,-2]];
+  ctx.beginPath();pts.forEach(([a,b],i)=>i?ctx.lineTo(a,b):ctx.moveTo(a,b));ctx.closePath();
+  ctx.fill();ctx.stroke();
+  ctx.fillStyle=BG;ctx.strokeStyle=FG;ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(2,-2);ctx.lineTo(-17,-9+f*1.6);ctx.lineTo(-8,5);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle=BG;ctx.fillRect(8,-6,3,3);
+  ctx.restore();
+}
+function label(txt,y,size){
+  ctx.font=size+'px "Archivo Black","Arial Black",Impact,sans-serif';ctx.textAlign='center';
+  ctx.lineJoin='round';ctx.lineWidth=8;ctx.strokeStyle=BG;ctx.strokeText(txt,W/2,y);
+  ctx.fillStyle=FG;ctx.fillText(txt,W/2,y);
+}
+function draw(){
+  BG=cs.getPropertyValue('--bg').trim()||BG;FG=cs.getPropertyValue('--fg').trim()||FG;
+  ctx.fillStyle=BG;ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle=FG;
+  [[84,3],[62,1.5],[40,1.5]].forEach(([r,w])=>{ctx.lineWidth=w;ctx.beginPath();ctx.arc(290,150,r,0,TAU);ctx.stroke();});
+  ctx.fillStyle=FG;ctx.beginPath();ctx.arc(290,150,16,0,TAU);ctx.fill();
+  ctx.globalAlpha=.25;ctx.lineWidth=2;
+  for(let i=0;i<6;i++){
+    const y=60+i*58+(i%2)*14,len=30+(i*37)%50,x=((i*131-frame*(1+i*.15))%(W+120)+W+120)%(W+120)-60;
+    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+len,y);ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+  skyline(FAR,.25,.08);skyline(NEAR,.6,.16);
+  pipes.forEach(p=>{drawPipe(p,0,p.top,true);drawPipe(p,p.top+GAP,H-GROUND-p.top-GAP,false);});
+  ctx.fillStyle=FG;ctx.fillRect(0,H-GROUND,W,GROUND);
+  ctx.fillStyle=BG;
+  const off=(state==='play'?frame*SPEED:frame*.4)%32;
+  for(let x=-32;x<W+32;x+=32){
+    ctx.beginPath();ctx.moveTo(x-off,H-GROUND+18);ctx.lineTo(x-off+16,H-GROUND+18);
+    ctx.lineTo(x-off+8,H-GROUND+36);ctx.lineTo(x-off-8,H-GROUND+36);ctx.closePath();ctx.fill();
+  }
+  drawBird();
+  if(state==='dead'){ctx.globalAlpha=.25;ctx.fillStyle=FG;ctx.fillRect(0,0,W,H);ctx.globalAlpha=1;}
+  if(state==='play'||state==='dead')label(score,84,56);
+  if(state==='ready'){label(nick,60,20);label('Торкніться, щоб злетіти',H/2+90,18);}
+}
+function loop(){update();draw();requestAnimationFrame(loop)}
+
+/* ---------- events ---------- */
+function tryPlay(){
+  const v=$('nick').value.replace(/\s+/g,' ').trim().slice(0,14);
+  if(v.length<2){$('err').textContent='Введіть нікнейм від 2 символів.';$('nick').focus();return;}
+  nick=v;$('err').textContent='';
+  try{localStorage.setItem('swift-nick',nick)}catch(e){}
+  startRun();
+}
+$('play').onclick=tryPlay;
+$('nick').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();tryPlay();}});
+$('nick').addEventListener('input',()=>{$('err').textContent=''});
+$('toBoard').onclick=()=>{renderBoard();show('board');$('boardBack').dataset.to='menu';};
+$('overBoard').onclick=()=>{renderBoard();show('board');$('boardBack').dataset.to='over';};
+$('boardBack').onclick=()=>show($('boardBack').dataset.to||'menu');
+$('again').onclick=()=>{if(deadTimer<=0)startRun();};
+$('overMenu').onclick=()=>{state='menu';resetBird();show('menu');};
+addEventListener('keydown',e=>{
+  if(state==='menu'||e.target.tagName==='INPUT')return;
+  if(e.code==='Space'||e.code==='ArrowUp'){
+    if(state==='dead'&&!$('board').classList.contains('hidden'))return;
+    e.preventDefault();flap();
+  }
+});
+$('wrap').addEventListener('pointerdown',e=>{
+  if(e.target.closest('.panel')||state==='menu')return;
+  e.preventDefault();flap();
+});
+
+rows=loadScores();resetBird();show('menu');loop();renderBoard();
+</script>
+</body>
+</html>
+
