@@ -3,7 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Fly through the columns in Feather Rush. Tap to flap, dodge every obstacle, and beat your high score.">
+<title>Feather Rush</title>
+<meta name="theme-color" content="#202020">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Feather Rush">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<meta name="description" content="Fly through the columns in Feather Rush. Tap to flap, dodge every obstacle, and beat your high score.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Feather Rush">
 <meta property="og:description" content="Fly through the columns. One mistake and it’s over.">
@@ -15,8 +23,8 @@
 <meta name="twitter:title" content="Feather Rush">
 <meta name="twitter:description" content="Fly through the columns. One mistake and it’s over.">
 <meta name="twitter:image" content="https://sn0rkdev.github.io/Feather-Rush-game/Feather-Rush-Social-Preview.png">
-<title>Feather Rush</title>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#e8e8e8; --fg:#242424; --accent:#777; --accent-2:#b7b7b7;
@@ -113,6 +121,7 @@ input:focus-visible,.btn:focus-visible{outline:3px solid var(--fg);outline-offse
   </div>
 </div>
 <script>
+if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js',{scope:'./'}).catch(()=>{}));}
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 const W=400,H=600,GROUND=60,TAU=Math.PI*2;
 const GRAV=0.26,FLAP=-6.3,SPEED=3.15,GAP=160,PIPE_W=62,SPACING=230;
@@ -120,9 +129,9 @@ const cs=getComputedStyle(document.documentElement);
 let BG='#e8e8e8',FG='#242424',ACCENT='#777',ACCENT2='#b7b7b7';
 const $=id=>document.getElementById(id);
 const TEXT={
-  en:{tagline:'Fly between the columns. One mistake and it’s over.',nickname:'Your nickname',nickPlaceholder:'2–14 characters',play:'Play',top:'Top 10',instructions:'Flap: Space, click, or tap.',boardTitle:'All-time Top 10',back:'Back',over:'Game over',score:'Your score',again:'Play again',menu:'Menu',tap:'Tap to flap',nickError:'Enter a nickname with at least 2 characters.',empty:'No scores yet. Play a round and set the first record!',local:'Scores are saved only in this browser.',noName:'Anonymous',newRecord:'New personal best!',best:'Your best: {score}',saveError:'Could not save the score in this browser.',saved:'Score added to the local leaderboard.',soundOn:'Sound on',soundOff:'Sound off',changeLanguage:'Change language',languageName:'English'},
-  uk:{tagline:'Летіть між колонами. Одна помилка — і кінець.',nickname:'Ваш нікнейм',nickPlaceholder:'Від 2 до 14 символів',play:'Грати',top:'Топ-10',instructions:'Змах крил: пробіл, клік або дотик.',boardTitle:'Топ-10 за весь час',back:'Назад',over:'Кінець гри',score:'Ваш рахунок',again:'Ще раз',menu:'Меню',tap:'Торкніться, щоб злетіти',nickError:'Введіть нікнейм від 2 символів.',empty:'Поки порожньо. Зіграйте й встановіть перший рекорд!',local:'Рейтинг зберігається лише в цьому браузері.',noName:'Без імені',newRecord:'Новий особистий рекорд!',best:'Ваш рекорд: {score}',saveError:'Не вдалося зберегти результат у цьому браузері.',saved:'Результат записано до локального рейтингу.',soundOn:'Увімкнути звук',soundOff:'Вимкнути звук',changeLanguage:'Змінити мову',languageName:'Українська'},
-  de:{tagline:'Flieg zwischen den Säulen hindurch. Ein Fehler und es ist vorbei.',nickname:'Dein Spitzname',nickPlaceholder:'2–14 Zeichen',play:'Spielen',top:'Top 10',instructions:'Flügelschlag: Leertaste, klicken oder tippen.',boardTitle:'Top 10 aller Zeiten',back:'Zurück',over:'Spiel vorbei',score:'Dein Punktestand',again:'Nochmal spielen',menu:'Menü',tap:'Tippen zum Fliegen',nickError:'Gib einen Spitznamen mit mindestens 2 Zeichen ein.',empty:'Noch keine Punkte. Spiele eine Runde und setze den ersten Rekord!',local:'Die Rangliste wird nur in diesem Browser gespeichert.',noName:'Anonym',newRecord:'Neuer persönlicher Rekord!',best:'Dein Rekord: {score}',saveError:'Der Punktestand konnte nicht in diesem Browser gespeichert werden.',saved:'Punktestand zur lokalen Rangliste hinzugefügt.',soundOn:'Ton einschalten',soundOff:'Ton ausschalten',changeLanguage:'Sprache ändern',languageName:'Deutsch'}
+  en:{tagline:'Fly between the columns. One mistake and it’s over.',nickname:'Your nickname',nickPlaceholder:'2–14 characters',play:'Play',top:'Top 10',instructions:'Flap: Space, click, or tap.',boardTitle:'All-time Top 10',back:'Back',over:'Game over',score:'Your score',again:'Play again',menu:'Menu',tap:'Tap to flap',nickError:'Enter a nickname with at least 2 characters.',empty:'No scores yet. Play a round and set the first record!',local:'Scores are saved only in this browser.',online:'Global leaderboard — visible to everyone.',loading:'Loading global scores…',loadError:'Could not load online scores. Showing saved scores on this device.',noName:'Anonymous',newRecord:'New personal best!',best:'Your best: {score}',saveError:'Could not save the score.',saved:'Score added to the global leaderboard.',savedLocal:'Score saved on this device only.',cloudFailSavedLocal:'Online save failed; score was kept only on this device.',soundOn:'Sound on',soundOff:'Sound off',changeLanguage:'Change language',languageName:'English'},
+  uk:{tagline:'Летіть між колонами. Одна помилка — і кінець.',nickname:'Ваш нікнейм',nickPlaceholder:'Від 2 до 14 символів',play:'Грати',top:'Топ-10',instructions:'Змах крил: пробіл, клік або дотик.',boardTitle:'Топ-10 за весь час',back:'Назад',over:'Кінець гри',score:'Ваш рахунок',again:'Ще раз',menu:'Меню',tap:'Торкніться, щоб злетіти',nickError:'Введіть нікнейм від 2 символів.',empty:'Поки порожньо. Зіграйте й встановіть перший рекорд!',local:'Рейтинг зберігається лише в цьому браузері.',online:'Загальний рейтинг — його бачать усі.',loading:'Завантажую загальні рекорди…',loadError:'Не вдалося завантажити онлайн-рейтинг. Показую результати з цього пристрою.',noName:'Без імені',newRecord:'Новий особистий рекорд!',best:'Ваш рекорд: {score}',saveError:'Не вдалося зберегти результат.',saved:'Результат додано до загального рейтингу.',savedLocal:'Результат збережено лише на цьому пристрої.',cloudFailSavedLocal:'Не вдалося надіслати результат онлайн; його збережено лише на цьому пристрої.',soundOn:'Увімкнути звук',soundOff:'Вимкнути звук',changeLanguage:'Змінити мову',languageName:'Українська'},
+  de:{tagline:'Flieg zwischen den Säulen hindurch. Ein Fehler und es ist vorbei.',nickname:'Dein Spitzname',nickPlaceholder:'2–14 Zeichen',play:'Spielen',top:'Top 10',instructions:'Flügelschlag: Leertaste, klicken oder tippen.',boardTitle:'Top 10 aller Zeiten',back:'Zurück',over:'Spiel vorbei',score:'Dein Punktestand',again:'Nochmal spielen',menu:'Menü',tap:'Tippen zum Fliegen',nickError:'Gib einen Spitznamen mit mindestens 2 Zeichen ein.',empty:'Noch keine Punkte. Spiele eine Runde und setze den ersten Rekord!',local:'Die Rangliste wird nur in diesem Browser gespeichert.',online:'Globale Rangliste — für alle sichtbar.',loading:'Globale Rangliste wird geladen…',loadError:'Online-Punkte konnten nicht geladen werden. Lokale Ergebnisse werden angezeigt.',noName:'Anonym',newRecord:'Neuer persönlicher Rekord!',best:'Dein Rekord: {score}',saveError:'Der Punktestand konnte nicht gespeichert werden.',saved:'Punktestand zur globalen Rangliste hinzugefügt.',savedLocal:'Punktestand nur auf diesem Gerät gespeichert.',cloudFailSavedLocal:'Online-Speichern fehlgeschlagen; Punktestand nur auf diesem Gerät gespeichert.',soundOn:'Ton einschalten',soundOff:'Ton ausschalten',changeLanguage:'Sprache ändern',languageName:'Deutsch'}
 };
 let language='en',lastNewBest=false,lastOverNoteKey='';
 try{const savedLanguage=localStorage.getItem('swift-language');if(TEXT[savedLanguage])language=savedLanguage}catch(e){}
@@ -203,8 +212,16 @@ function hideAll(){['menu','board','over'].forEach(p=>$(p).classList.add('hidden
 
 /* ---------- leaderboard (local to this browser) ---------- */
 const SCORES_KEY='swift-scores';
+// Replace these placeholders with the project URL and publishable key from Supabase.
+const SUPABASE_URL='https://qbrdfeidgcgfepeuutuo.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_gv4XrlfT1R5G8QGjZIxHng_wTi-WQn4';
+const publicKeyLooksValid=SUPABASE_PUBLISHABLE_KEY.startsWith('sb_publishable_')||SUPABASE_PUBLISHABLE_KEY.startsWith('eyJ');
+const cloudConfigured=SUPABASE_URL.startsWith('https://')&&publicKeyLooksValid;
+let cloud=null;
+try{if(cloudConfigured&&window.supabase)cloud=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY)}catch(e){}
 let rows=[];
-function loadScores(){
+let boardStatus='ready';
+function loadLocalScores(){
   try{
     const saved=JSON.parse(localStorage.getItem(SCORES_KEY)||'[]');
     return Array.isArray(saved)?saved.filter(r=>r&&typeof r.name==='string'&&Number.isFinite(Number(r.best))).map(r=>({name:r.name.slice(0,14),best:Number(r.best)})).sort((a,b)=>b.best-a.best).slice(0,10):[];
@@ -221,12 +238,24 @@ function renderBoard(){
     li.append(n,nm,sc);list.append(li);
   });
   const note=$('boardNote');
-  if(!rows.length)note.textContent=TEXT[language].empty;
-  else note.textContent=TEXT[language].local;
+  if(boardStatus==='loading')note.textContent=TEXT[language].loading;
+  else if(boardStatus==='error')note.textContent=TEXT[language].loadError;
+  else if(!rows.length)note.textContent=TEXT[language].empty;
+  else note.textContent=cloud?TEXT[language].online:TEXT[language].local;
 }
-function submit(sc){
+async function refreshBoard(){
+  if(!cloud){rows=loadLocalScores();boardStatus='ready';renderBoard();return;}
+  boardStatus='loading';renderBoard();
   try{
-    rows=loadScores();
+    const {data,error}=await cloud.from('scores').select('nickname,score').order('score',{ascending:false}).order('created_at',{ascending:true}).limit(10);
+    if(error)throw error;
+    rows=(data||[]).map(r=>({name:String(r.nickname||TEXT[language].noName).slice(0,14),best:Number(r.score)||0}));boardStatus='ready';
+  }catch(e){rows=loadLocalScores();boardStatus='error';}
+  renderBoard();
+}
+function saveLocalScore(sc){
+  try{
+    rows=loadLocalScores();
     const existing=rows.find(r=>r.name.toLocaleLowerCase()===nick.toLocaleLowerCase());
     if(existing)existing.best=Math.max(existing.best,sc);
     else rows.push({name:nick,best:sc});
@@ -235,6 +264,17 @@ function submit(sc){
     localStorage.setItem(SCORES_KEY,JSON.stringify(rows));
     return true;
   }catch(e){return false;}
+}
+async function submit(sc){
+  if(sc<1)return {ok:true,online:false,skipped:true};
+  if(cloud){
+    try{
+      const {error}=await cloud.from('scores').insert({nickname:nick,score:sc});
+      if(error)throw error;
+      return {ok:true,online:true};
+    }catch(e){return {ok:saveLocalScore(sc),online:false,cloudFailed:true};}
+  }
+  return {ok:saveLocalScore(sc),online:false};
 }
 
 /* ---------- game ---------- */
@@ -261,9 +301,12 @@ async function die(){
   $('overBest').textContent=newBest&&score>0?TEXT[language].newRecord:TEXT[language].best.replace('{score}',String(best));
   $('overNote').textContent='';
   show('over');
-  const ok=submit(score);
-  if(!ok){lastOverNoteKey='saveError';$('overNote').textContent=TEXT[language].saveError;}
-  else if(newBest&&score>0){lastOverNoteKey='saved';$('overNote').textContent=TEXT[language].saved;}
+  const result=await submit(score);
+  if(!result.ok){lastOverNoteKey='saveError';$('overNote').textContent=TEXT[language].saveError;}
+  else if(score>0){
+    lastOverNoteKey=result.online?'saved':result.cloudFailed?'cloudFailSavedLocal':'savedLocal';
+    $('overNote').textContent=TEXT[language][lastOverNoteKey];
+  }
 }
 function update(step){
   frame+=step;
@@ -540,8 +583,8 @@ $('themeToggle').onclick=()=>{theme=theme==='system'?'light':theme==='light'?'da
 $('soundToggle').onclick=e=>{e.stopPropagation();soundOn=!soundOn;try{localStorage.setItem('swift-sound',soundOn?'on':'off')}catch(err){}updateSoundButton();if(soundOn)tone(700,700,.05,0,'sine',.025);};
 $('nick').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();tryPlay();}});
 $('nick').addEventListener('input',()=>{$('err').textContent=''});
-$('toBoard').onclick=()=>{renderBoard();show('board');$('boardBack').dataset.to='menu';};
-$('overBoard').onclick=()=>{renderBoard();show('board');$('boardBack').dataset.to='over';};
+$('toBoard').onclick=()=>{show('board');$('boardBack').dataset.to='menu';refreshBoard();};
+$('overBoard').onclick=()=>{show('board');$('boardBack').dataset.to='over';refreshBoard();};
 $('boardBack').onclick=()=>show($('boardBack').dataset.to||'menu');
 $('again').onclick=()=>{if(deadTimer<=0)startRun();};
 $('overMenu').onclick=()=>{state='menu';resetBird();show('menu');};
@@ -557,7 +600,7 @@ $('wrap').addEventListener('pointerdown',e=>{
   e.preventDefault();flap();
 });
 
-rows=loadScores();resetBird();show('menu');applyLanguage();loop();renderBoard();
+rows=loadLocalScores();resetBird();show('menu');applyLanguage();loop();renderBoard();
 </script>
 </body>
 </html>
