@@ -1,4 +1,4 @@
-const CACHE_NAME='feather-rush-pwa-v4';
+const CACHE_NAME='feather-rush-pwa-v7';
 const APP_FILES=['./','./index.html','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
 
 self.addEventListener('install',event=>{

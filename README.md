@@ -18,4 +18,4 @@ Open the site in Safari, tap **Share**, then choose **Add to Home Screen**. iPho
 
 After the first visit the service worker caches the game shell, so it can open offline. Online leaderboard access still requires an internet connection and Supabase configuration.
 
-The ambient soundtrack changes with the theme: brighter and more upbeat in light mode, lower and more mysterious at night. The music-note button controls it separately from the speaker button for sound effects. The pipe lighting moves more slowly, the swift has added shading, and the page margins follow the selected theme.
+The soundtrack has an upbeat arcade-electronic feel, with major-key chords, a bouncy beat, springy bass, and a bright synth hook. Night mode keeps the same playful harmony with a softer, lower tone. The music-note button controls it separately from the speaker button for sound effects. The pipe lighting moves more slowly, the swift has added shading, and the page margins follow the selected theme.
