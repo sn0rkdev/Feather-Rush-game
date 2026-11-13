@@ -38,7 +38,7 @@
 @media (prefers-color-scheme: dark){:root[data-theme="system"]:not([data-palette="color"]){--bg:#202020;--fg:#e6e6e6;--accent:#a0a0a0;--accent-2:#5d5d5d}:root[data-theme="system"][data-palette="color"]{--bg:#292d30;--fg:#d8d7d0;--accent:#92a6ad;--accent-2:#656d70}}
 html,body{height:100%;margin:0}
 body{
-  background:var(--fg);color:var(--fg);
+  background:var(--bg);color:var(--fg);
   font-family:"Archivo Black","Arial Black",Impact,sans-serif;
   display:flex;align-items:center;justify-content:center;
   overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none;
@@ -48,8 +48,8 @@ canvas{width:100%;height:100%;display:block;background:var(--bg)}
 #topControls{position:absolute;z-index:3;top:12px;right:12px;display:flex;gap:7px}
 #topControls button{height:40px;min-width:40px;padding:6px 9px;border:1px solid color-mix(in srgb,var(--fg) 22%,transparent);border-radius:13px;background:color-mix(in srgb,var(--bg) 68%,transparent);color:var(--fg);font:700 11px system-ui,Arial,sans-serif;box-shadow:0 5px 18px #0002,inset 0 1px 0 #ffffff75;backdrop-filter:blur(14px) saturate(135%);-webkit-backdrop-filter:blur(14px) saturate(135%);cursor:pointer;touch-action:manipulation;transition:transform .16s,box-shadow .16s}
 #topControls button:hover{transform:translateY(-1px);box-shadow:0 8px 22px #0003,inset 0 1px 0 #ffffff9c}
-#soundToggle svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-#soundToggle .slash{display:none}#soundToggle.muted .slash{display:block}
+#soundToggle svg,#musicToggle svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#soundToggle .slash,#musicToggle .slash{display:none}#soundToggle.muted .slash,#musicToggle.muted .slash{display:block}
 #overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
 .panel{pointer-events:auto;background:color-mix(in srgb,var(--bg) 72%,transparent);color:var(--fg);border:1px solid color-mix(in srgb,var(--fg) 24%,transparent);border-radius:21px;box-shadow:0 24px 65px #0003,inset 0 1px 0 #ffffff80,0 0 30px color-mix(in srgb,var(--fg) 9%,transparent);padding:22px 24px;width:min(84%,340px);box-sizing:border-box;max-height:92%;overflow-y:auto;backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%)}
 .panel h1{margin:0;font-size:clamp(2rem,8vw,3rem);line-height:.95;letter-spacing:-.05em;font-weight:400;white-space:nowrap;text-shadow:0 0 2px currentColor,0 0 12px color-mix(in srgb,var(--fg) 38%,transparent),0 0 27px color-mix(in srgb,var(--fg) 20%,transparent)}
@@ -83,6 +83,9 @@ input:focus-visible,.btn:focus-visible{outline:3px solid var(--fg);outline-offse
     <button id="languageToggle" type="button" aria-label="Change language" title="Change language">EN</button>
     <button id="paletteToggle" type="button" aria-label="Switch palette" title="Switch palette">B&amp;W</button>
     <button id="themeToggle" type="button" aria-label="Change theme" title="Change theme">AUTO</button>
+    <button id="musicToggle" type="button" aria-label="Music on" title="Music on" aria-pressed="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l12-2v13M9 8l12-2"/><ellipse cx="5" cy="18" rx="4" ry="3"/><ellipse cx="17" cy="16" rx="4" ry="3"/><path class="slash" d="m3 3 18 18"/></svg>
+    </button>
     <button id="soundToggle" type="button" aria-label="Sound on" title="Sound on" aria-pressed="true">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/><path class="slash" d="m4 4 16 16"/></svg>
     </button>
@@ -129,9 +132,9 @@ const cs=getComputedStyle(document.documentElement);
 let BG='#e8e8e8',FG='#242424',ACCENT='#777',ACCENT2='#b7b7b7';
 const $=id=>document.getElementById(id);
 const TEXT={
-  en:{tagline:'Fly between the columns. One mistake and it’s over.',nickname:'Your nickname',nickPlaceholder:'2–14 characters',play:'Play',top:'Top 10',instructions:'Flap: Space, click, or tap.',boardTitle:'All-time Top 10',back:'Back',over:'Game over',score:'Your score',again:'Play again',menu:'Menu',tap:'Tap to flap',nickError:'Enter a nickname with at least 2 characters.',empty:'No scores yet. Play a round and set the first record!',local:'Scores are saved only in this browser.',online:'Global leaderboard — visible to everyone.',loading:'Loading global scores…',loadError:'Could not load online scores. Showing saved scores on this device.',noName:'Anonymous',newRecord:'New personal best!',best:'Your best: {score}',saveError:'Could not save the score.',saved:'Score added to the global leaderboard.',savedLocal:'Score saved on this device only.',cloudFailSavedLocal:'Online save failed; score was kept only on this device.',soundOn:'Sound on',soundOff:'Sound off',changeLanguage:'Change language',languageName:'English'},
-  uk:{tagline:'Летіть між колонами. Одна помилка — і кінець.',nickname:'Ваш нікнейм',nickPlaceholder:'Від 2 до 14 символів',play:'Грати',top:'Топ-10',instructions:'Змах крил: пробіл, клік або дотик.',boardTitle:'Топ-10 за весь час',back:'Назад',over:'Кінець гри',score:'Ваш рахунок',again:'Ще раз',menu:'Меню',tap:'Торкніться, щоб злетіти',nickError:'Введіть нікнейм від 2 символів.',empty:'Поки порожньо. Зіграйте й встановіть перший рекорд!',local:'Рейтинг зберігається лише в цьому браузері.',online:'Загальний рейтинг — його бачать усі.',loading:'Завантажую загальні рекорди…',loadError:'Не вдалося завантажити онлайн-рейтинг. Показую результати з цього пристрою.',noName:'Без імені',newRecord:'Новий особистий рекорд!',best:'Ваш рекорд: {score}',saveError:'Не вдалося зберегти результат.',saved:'Результат додано до загального рейтингу.',savedLocal:'Результат збережено лише на цьому пристрої.',cloudFailSavedLocal:'Не вдалося надіслати результат онлайн; його збережено лише на цьому пристрої.',soundOn:'Увімкнути звук',soundOff:'Вимкнути звук',changeLanguage:'Змінити мову',languageName:'Українська'},
-  de:{tagline:'Flieg zwischen den Säulen hindurch. Ein Fehler und es ist vorbei.',nickname:'Dein Spitzname',nickPlaceholder:'2–14 Zeichen',play:'Spielen',top:'Top 10',instructions:'Flügelschlag: Leertaste, klicken oder tippen.',boardTitle:'Top 10 aller Zeiten',back:'Zurück',over:'Spiel vorbei',score:'Dein Punktestand',again:'Nochmal spielen',menu:'Menü',tap:'Tippen zum Fliegen',nickError:'Gib einen Spitznamen mit mindestens 2 Zeichen ein.',empty:'Noch keine Punkte. Spiele eine Runde und setze den ersten Rekord!',local:'Die Rangliste wird nur in diesem Browser gespeichert.',online:'Globale Rangliste — für alle sichtbar.',loading:'Globale Rangliste wird geladen…',loadError:'Online-Punkte konnten nicht geladen werden. Lokale Ergebnisse werden angezeigt.',noName:'Anonym',newRecord:'Neuer persönlicher Rekord!',best:'Dein Rekord: {score}',saveError:'Der Punktestand konnte nicht gespeichert werden.',saved:'Punktestand zur globalen Rangliste hinzugefügt.',savedLocal:'Punktestand nur auf diesem Gerät gespeichert.',cloudFailSavedLocal:'Online-Speichern fehlgeschlagen; Punktestand nur auf diesem Gerät gespeichert.',soundOn:'Ton einschalten',soundOff:'Ton ausschalten',changeLanguage:'Sprache ändern',languageName:'Deutsch'}
+  en:{tagline:'Fly between the columns. One mistake and it’s over.',nickname:'Your nickname',nickPlaceholder:'2–14 characters',play:'Play',top:'Top 10',instructions:'Flap: Space, click, or tap.',boardTitle:'All-time Top 10',back:'Back',over:'Game over',score:'Your score',again:'Play again',menu:'Menu',tap:'Tap to flap',nickError:'Enter a nickname with at least 2 characters.',empty:'No scores yet. Play a round and set the first record!',local:'Scores are saved only in this browser.',online:'Global leaderboard — visible to everyone.',loading:'Loading global scores…',loadError:'Could not load online scores. Showing saved scores on this device.',noName:'Anonymous',newRecord:'New personal best!',best:'Your best: {score}',saveError:'Could not save the score.',saved:'Score added to the global leaderboard.',savedLocal:'Score saved on this device only.',cloudFailSavedLocal:'Online save failed; score was kept only on this device.',soundOn:'Sound effects on',soundOff:'Sound effects off',musicOn:'Music on',musicOff:'Music off',changeLanguage:'Change language',languageName:'English'},
+  uk:{tagline:'Летіть між колонами. Одна помилка — і кінець.',nickname:'Ваш нікнейм',nickPlaceholder:'Від 2 до 14 символів',play:'Грати',top:'Топ-10',instructions:'Змах крил: пробіл, клік або дотик.',boardTitle:'Топ-10 за весь час',back:'Назад',over:'Кінець гри',score:'Ваш рахунок',again:'Ще раз',menu:'Меню',tap:'Торкніться, щоб злетіти',nickError:'Введіть нікнейм від 2 символів.',empty:'Поки порожньо. Зіграйте й встановіть перший рекорд!',local:'Рейтинг зберігається лише в цьому браузері.',online:'Загальний рейтинг — його бачать усі.',loading:'Завантажую загальні рекорди…',loadError:'Не вдалося завантажити онлайн-рейтинг. Показую результати з цього пристрою.',noName:'Без імені',newRecord:'Новий особистий рекорд!',best:'Ваш рекорд: {score}',saveError:'Не вдалося зберегти результат.',saved:'Результат додано до загального рейтингу.',savedLocal:'Результат збережено лише на цьому пристрої.',cloudFailSavedLocal:'Не вдалося надіслати результат онлайн; його збережено лише на цьому пристрої.',soundOn:'Увімкнути звукові ефекти',soundOff:'Вимкнути звукові ефекти',musicOn:'Увімкнути музику',musicOff:'Вимкнути музику',changeLanguage:'Змінити мову',languageName:'Українська'},
+  de:{tagline:'Flieg zwischen den Säulen hindurch. Ein Fehler und es ist vorbei.',nickname:'Dein Spitzname',nickPlaceholder:'2–14 Zeichen',play:'Spielen',top:'Top 10',instructions:'Flügelschlag: Leertaste, klicken oder tippen.',boardTitle:'Top 10 aller Zeiten',back:'Zurück',over:'Spiel vorbei',score:'Dein Punktestand',again:'Nochmal spielen',menu:'Menü',tap:'Tippen zum Fliegen',nickError:'Gib einen Spitznamen mit mindestens 2 Zeichen ein.',empty:'Noch keine Punkte. Spiele eine Runde und setze den ersten Rekord!',local:'Die Rangliste wird nur in diesem Browser gespeichert.',online:'Globale Rangliste — für alle sichtbar.',loading:'Globale Rangliste wird geladen…',loadError:'Online-Punkte konnten nicht geladen werden. Lokale Ergebnisse werden angezeigt.',noName:'Anonym',newRecord:'Neuer persönlicher Rekord!',best:'Dein Rekord: {score}',saveError:'Der Punktestand konnte nicht gespeichert werden.',saved:'Punktestand zur globalen Rangliste hinzugefügt.',savedLocal:'Punktestand nur auf diesem Gerät gespeichert.',cloudFailSavedLocal:'Online-Speichern fehlgeschlagen; Punktestand nur auf diesem Gerät gespeichert.',soundOn:'Soundeffekte ein',soundOff:'Soundeffekte aus',musicOn:'Musik einschalten',musicOff:'Musik ausschalten',changeLanguage:'Sprache ändern',languageName:'Deutsch'}
 };
 let language='en',lastNewBest=false,lastOverNoteKey='';
 try{const savedLanguage=localStorage.getItem('swift-language');if(TEXT[savedLanguage])language=savedLanguage}catch(e){}
@@ -144,6 +147,7 @@ let palette='mono',theme='system';
 try{if(localStorage.getItem('swift-palette')==='color')palette='color';const savedTheme=localStorage.getItem('swift-theme');if(['system','light','dark'].includes(savedTheme))theme=savedTheme}catch(e){}
 function updateAppearance(){
   const root=document.documentElement,ct=CONTROL_TEXT[language];root.dataset.palette=palette;root.dataset.theme=theme;
+  if(ambientBus)updateAmbientPattern();
   const palName=palette==='color'?ct.colorName:ct.monoName;
   $('paletteToggle').textContent=palette==='color'?ct.color:ct.mono;$('paletteToggle').title=ct.paletteTitle+': '+palName;$('paletteToggle').setAttribute('aria-label',ct.paletteTitle+': '+palName);
   const themeName=theme==='light'?ct.light:theme==='dark'?ct.dark:ct.system;
@@ -162,7 +166,7 @@ function applyLanguage(){
     $('overBest').textContent=lastNewBest&&finalScore>0?t.newRecord:t.best.replace('{score}',String(best));
     $('overNote').textContent=lastOverNoteKey?t[lastOverNoteKey]:'';
   }
-  updateAppearance();renderBoard();updateSoundButton();
+  updateAppearance();renderBoard();updateSoundButton();updateMusicButton();
 }
 let best=0,nick='';
 try{best=parseInt(localStorage.getItem('swift-best'))||0;nick=localStorage.getItem('swift-nick')||''}catch(e){}
@@ -170,11 +174,11 @@ $('nick').value=nick;
 let bird,pipes,score,state='menu',frame=0,deadTimer=0,prevPanel='menu',lastTime=0;
 let cameoAt=-1,nextCameoScore=20,cameoHitPlayed=false;
 let motherlandAt=-1,motherlandStartX=322,motherlandNextScore=10;
-let audioCtx=null,soundOn=true;
+let audioCtx=null,soundOn=true,musicOn=true;
 try{soundOn=localStorage.getItem('swift-sound')!=='off'}catch(e){}
+try{musicOn=localStorage.getItem('swift-music')!=='off'}catch(e){}
 
 function audio(){
-  if(!soundOn)return null;
   try{
     const AC=window.AudioContext||window.webkitAudioContext;
     if(!AC)return null;
@@ -184,6 +188,7 @@ function audio(){
   }catch(e){return null;}
 }
 function tone(freq,endFreq,duration,when=0,wave='sine',volume=.045){
+  if(!soundOn)return;
   const a=audio();if(!a)return;
   const start=a.currentTime+when,osc=a.createOscillator(),gain=a.createGain();
   osc.type=wave;osc.frequency.setValueAtTime(freq,start);osc.frequency.exponentialRampToValueAtTime(Math.max(1,endFreq),start+duration);
@@ -194,10 +199,57 @@ function flapSound(){tone(520,260,.075,0,'triangle',.035)}
 function scoreSound(){tone(660,880,.09,0,'sine',.04);tone(880,1180,.12,.075,'sine',.035)}
 function interceptSound(){tone(430,980,.12,0,'triangle',.045);tone(1050,360,.2,.1,'sine',.04)}
 function dieSound(){tone(300,90,.28,0,'triangle',.055)}
+let ambientBus=null,ambientChordTimer=null,ambientNoteTimer=null,ambientNoteIndex=0,ambientChordIndex=0;
+const AMBIENT_CHORDS_DAY=[[261.63,329.63,392,587.33],[196,246.94,293.66,440],[220,277.18,329.63,493.88],[174.61,220,261.63,392]];
+const AMBIENT_CHORDS_NIGHT=[[146.83,174.61,220,261.63],[138.59,164.81,207.65,246.94],[155.56,185,233.08,277.18],[130.81,155.56,196,233.08]];
+const AMBIENT_NOTES_DAY=[523.25,659.25,783.99,880,783.99,659.25,587.33,659.25];
+const AMBIENT_NOTES_NIGHT=[293.66,311.13,233.08,261.63,207.65,233.08,311.13,293.66];
+function playAmbientChord(){
+  if(!musicOn||!ambientBus||!audioCtx)return;
+  const dark=darkThemeActive(),chords=dark?AMBIENT_CHORDS_NIGHT:AMBIENT_CHORDS_DAY;
+  const now=audioCtx.currentTime,chord=chords[ambientChordIndex++%chords.length];
+  chord.forEach((frequency,i)=>{
+    const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+    osc.type='sine';osc.frequency.setValueAtTime(frequency,now);gain.gain.setValueAtTime(.0001,now);
+    const level=dark?(i===0 ? .029 : .016):(i===0 ? .052 : .031);
+    gain.gain.exponentialRampToValueAtTime(level,now+(dark?3.2:1.6));gain.gain.setValueAtTime(level,now+6.8);gain.gain.exponentialRampToValueAtTime(.0001,now+8.8);
+    osc.connect(gain);gain.connect(ambientBus);osc.start(now);osc.stop(now+8.9);
+  });
+}
+function playAmbientNote(){
+  if(!musicOn||!ambientBus||!audioCtx)return;
+  const dark=darkThemeActive(),notes=dark?AMBIENT_NOTES_NIGHT:AMBIENT_NOTES_DAY;
+  const now=audioCtx.currentTime,osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+  osc.type=dark?'sine':'triangle';osc.frequency.setValueAtTime(notes[ambientNoteIndex++%notes.length],now);
+  const level=dark ? .010 : .026,attack=dark ? .9 : .22,decay=dark ? 3.8 : 2.6;
+  gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(level,now+attack);gain.gain.exponentialRampToValueAtTime(.0001,now+decay);
+  osc.connect(gain);gain.connect(ambientBus);osc.start(now);osc.stop(now+3.45);
+}
+function startAmbient(){
+  if(!musicOn||ambientBus)return;
+  const a=audio();if(!a)return;
+  ambientBus=a.createGain();ambientBus.gain.setValueAtTime(.0001,a.currentTime);ambientBus.gain.linearRampToValueAtTime(.28,a.currentTime+2.5);ambientBus.connect(a.destination);
+  playAmbientChord();playAmbientNote();updateAmbientPattern();
+}
+function updateAmbientPattern(){
+  if(ambientChordTimer)clearInterval(ambientChordTimer);if(ambientNoteTimer)clearInterval(ambientNoteTimer);
+  ambientChordTimer=setInterval(playAmbientChord,darkThemeActive()?10500:7600);
+  ambientNoteTimer=setInterval(playAmbientNote,darkThemeActive()?5600:2900);
+}
+function stopAmbient(){
+  if(ambientChordTimer)clearInterval(ambientChordTimer);if(ambientNoteTimer)clearInterval(ambientNoteTimer);ambientChordTimer=ambientNoteTimer=null;
+  if(!ambientBus)return;const bus=ambientBus;ambientBus=null;
+  try{const now=audioCtx.currentTime;bus.gain.cancelScheduledValues(now);bus.gain.setValueAtTime(Math.max(.0001,bus.gain.value),now);bus.gain.linearRampToValueAtTime(.0001,now+.8);setTimeout(()=>bus.disconnect(),1000)}catch(e){}
+}
 function updateSoundButton(){
   const label=soundOn?TEXT[language].soundOff:TEXT[language].soundOn;
   $('soundToggle').classList.toggle('muted',!soundOn);$('soundToggle').setAttribute('aria-pressed',String(soundOn));
   $('soundToggle').setAttribute('aria-label',label);$('soundToggle').title=label;
+}
+function updateMusicButton(){
+  const label=musicOn?TEXT[language].musicOff:TEXT[language].musicOn;
+  $('musicToggle').classList.toggle('muted',!musicOn);$('musicToggle').setAttribute('aria-pressed',String(musicOn));
+  $('musicToggle').setAttribute('aria-label',label);$('musicToggle').title=label;
 }
 
 const FAR=[[40,60],[30,90],[50,50],[36,110],[44,70],[30,40],[50,100],[40,60],[40,80],[40,50]];
@@ -393,7 +445,7 @@ function hatch(x,y,w,h,step){
 function drawPipe(p,y,h,flip){
   const x=p.x,moonlit=darkThemeActive(),colored=document.documentElement.dataset.palette==='color';
   const lightDelta=290-(x+PIPE_W/2),distance=Math.abs(lightDelta);
-  const lightRange=150;
+  const lightRange=220;
   const fadeUnit=Math.max(0,Math.min(1,distance/lightRange)),visibility=fadeUnit*fadeUnit*(3-2*fadeUnit),shadow=1-visibility;
   const hatchUnit=Math.max(0,Math.min(1,(lightDelta+lightRange)/(lightRange*2)));
   const hatchBlend=hatchUnit*hatchUnit*(3-2*hatchUnit);
@@ -459,12 +511,21 @@ function drawBird(){
   ctx.fillStyle=FG;ctx.strokeStyle=BG;ctx.lineWidth=2;ctx.lineJoin='miter';
   const pts=[[-20,-8],[-8,-6],[5,-9],[22,-2],[7,2],[-3,7],[-10,2],[-20,3],[-14,-2]];
   ctx.beginPath();pts.forEach(([a,b],i)=>i?ctx.lineTo(a,b):ctx.moveTo(a,b));ctx.closePath();
+  const bodyGradient=ctx.createLinearGradient(-15,-10,13,9);
+  bodyGradient.addColorStop(0,FG);bodyGradient.addColorStop(.56,ACCENT);bodyGradient.addColorStop(1,FG);
+  ctx.fillStyle=bodyGradient;
   ctx.shadowColor='rgba(0,0,0,.35)';ctx.shadowBlur=9;ctx.shadowOffsetX=2;ctx.shadowOffsetY=4;
   ctx.fill();ctx.stroke();
   ctx.shadowColor='transparent';ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
+  ctx.save();ctx.clip();
+  const volume=ctx.createLinearGradient(-8,-9,10,8);
+  volume.addColorStop(0,'rgba(255,255,255,.2)');volume.addColorStop(.42,'rgba(255,255,255,0)');volume.addColorStop(1,'rgba(0,0,0,.24)');
+  ctx.fillStyle=volume;ctx.fillRect(-23,-11,48,22);ctx.restore();
   ctx.fillStyle=BG;ctx.strokeStyle=FG;ctx.lineWidth=2;
   ctx.beginPath();ctx.moveTo(2,-2);ctx.lineTo(-17,-9+f*1.6);ctx.lineTo(-8,5);ctx.closePath();ctx.fill();ctx.stroke();
+  const wingGradient=ctx.createLinearGradient(-14,-9,2,6);wingGradient.addColorStop(0,BG);wingGradient.addColorStop(1,ACCENT);ctx.fillStyle=wingGradient;ctx.fill();
   ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-13,-4+f);ctx.lineTo(-5,-1);ctx.stroke();
+  ctx.strokeStyle='rgba(0,0,0,.2)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-10,1);ctx.lineTo(-5,3);ctx.stroke();
   ctx.fillStyle=BG;ctx.fillRect(8,-6,3,3);
   ctx.restore();
 }
@@ -573,6 +634,7 @@ function tryPlay(){
   if(v.length<2){$('err').textContent=TEXT[language].nickError;$('nick').focus();return;}
   nick=v;$('err').textContent='';
   try{localStorage.setItem('swift-nick',nick)}catch(e){}
+  startAmbient();
   startRun();
 }
 $('play').onclick=tryPlay;
@@ -580,6 +642,7 @@ $('topControls').addEventListener('pointerdown',e=>e.stopPropagation());
 $('languageToggle').onclick=()=>{language=language==='en'?'uk':language==='uk'?'de':'en';try{localStorage.setItem('swift-language',language)}catch(e){}applyLanguage();};
 $('paletteToggle').onclick=()=>{palette=palette==='mono'?'color':'mono';try{localStorage.setItem('swift-palette',palette)}catch(e){}updateAppearance();};
 $('themeToggle').onclick=()=>{theme=theme==='system'?'light':theme==='light'?'dark':'system';try{localStorage.setItem('swift-theme',theme)}catch(e){}updateAppearance();};
+$('musicToggle').onclick=e=>{e.stopPropagation();musicOn=!musicOn;try{localStorage.setItem('swift-music',musicOn?'on':'off')}catch(err){}updateMusicButton();if(musicOn)startAmbient();else stopAmbient();};
 $('soundToggle').onclick=e=>{e.stopPropagation();soundOn=!soundOn;try{localStorage.setItem('swift-sound',soundOn?'on':'off')}catch(err){}updateSoundButton();if(soundOn)tone(700,700,.05,0,'sine',.025);};
 $('nick').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();tryPlay();}});
 $('nick').addEventListener('input',()=>{$('err').textContent=''});
